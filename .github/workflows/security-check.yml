@@ -1,0 +1,59 @@
+# GitHub Actions - Verificação de Segurança
+# Verifica se há dados sensíveis antes de aceitar PRs
+
+name: Security Check
+
+on:
+  pull_request:
+    branches: [ main, develop ]
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  security-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Verificar .env no Git
+      run: |
+        if git ls-files | grep -q "^\.env$"; then
+          echo "❌ ERRO: .env está no repositório!"
+          exit 1
+        fi
+        echo "✅ .env não está no repositório"
+    
+    - name: Verificar chaves hardcoded
+      run: |
+        if grep -r "sk-proj-" --include="*.py" --exclude-dir=venv . | grep -v ".env"; then
+          echo "❌ ERRO: Chaves OpenAI hardcoded encontradas!"
+          exit 1
+        fi
+        echo "✅ Nenhuma chave OpenAI hardcoded"
+    
+    - name: Verificar Google Secrets
+      run: |
+        if grep -r "GOCSPX-" --include="*.py" --include="*.md" . | grep -v ".env" | grep -v ".example"; then
+          echo "❌ ERRO: Google Secrets expostos!"
+          exit 1
+        fi
+        echo "✅ Nenhum Google Secret exposto"
+    
+    - name: Verificar arquivos sensíveis
+      run: |
+        if git ls-files | grep -E "client_secret.*\.json$|token\.pickle$|token\.json$"; then
+          echo "❌ ERRO: Arquivos sensíveis no repositório!"
+          exit 1
+        fi
+        echo "✅ Nenhum arquivo sensível no Git"
+    
+    - name: Verificar .env.example
+      run: |
+        if [ -f ".env.example" ]; then
+          if grep -q "sk-proj-[^s]" .env.example || grep -q "GOCSPX-[^s]" .env.example; then
+            echo "❌ ERRO: .env.example contém chaves REAIS!"
+            exit 1
+          fi
+          echo "✅ .env.example está seguro"
+        fi
