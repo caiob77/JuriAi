@@ -167,7 +167,7 @@ docker run -p 8000:8000 --env-file .env juriai
 
 ## 📄 Licença
 
-Este projeto está sob a licença MIT. Veja o arquivo `LICENSE` para mais detalhes.
+Este projeto está sob a licença MIT para uso privado. Veja o arquivo `LICENSE` para mais detalhes.
 
 ## 🆘 Suporte
 
